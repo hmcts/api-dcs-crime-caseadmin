@@ -89,13 +89,12 @@ components:
             - defendantOrganisation
       additionalProperties: false
 
-security:
-  - BearerAuth: []
 paths:
   /case/{caseUrn}/defendants:
     post:
       summary: Submit case and defendant details
       description: Sending case and defendant information
+      operationId: linkCaseAndDefendant
       tags:
         - Case and defendant details
       parameters:
@@ -201,6 +200,7 @@ paths:
     post:
       summary: Send updated defendant details
       description: Sending updated defendant information
+      operationId: updateDefendantDetails
       tags:
         - Case and defendant details
       parameters:
@@ -299,6 +299,7 @@ paths:
     post:
       summary: Add defence representation
       description: Adding defence representation
+      operationId: updateDefendantRepresentation
       tags:
         - Defence details for defendant
       parameters:
@@ -418,6 +419,7 @@ paths:
     post:
       summary: Submit material
       description: Upload a document and associate it with an existing case and (optionally) defendant
+      operationId: addCaseMaterial
       tags:
         - Submit material
       parameters:
