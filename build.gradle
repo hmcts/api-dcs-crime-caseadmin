@@ -8,7 +8,7 @@ plugins {
   id "org.cyclonedx.bom" version "2.3.0"
 }
 
-group = 'uk.gov.hmcts.cp'
+group = 'uk.gov.hmcts.dcs'
 version = System.getProperty('API_SPEC_VERSION') ?: '0.0.999'
 def githubActor = project.findProperty("github.actor") ?: System.getenv("GITHUB_ACTOR")
 def githubToken = project.findProperty("github.token") ?: System.getenv("GITHUB_TOKEN")
@@ -24,8 +24,8 @@ def githubRepo = System.getenv("GITHUB_REPOSITORY")
 //    println " - GITHUB_REPOSITORY=${githubRepo != null ? '✔' : '❌'}"
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_21
-  targetCompatibility = JavaVersion.VERSION_21
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
 }
 
 sourceSets {
@@ -159,8 +159,8 @@ openApiGenerate {
   generatorName = "spring"
   inputSpec = inputSpecFile.absolutePath
   outputDir = "$buildDir/generated"
-  apiPackage = "uk.gov.hmcts.cp.openapi.api"
-  modelPackage = "uk.gov.hmcts.cp.openapi.model"
+  apiPackage = "uk.gov.hmcts.dcs.openapi.api"
+  modelPackage = "uk.gov.hmcts.dcs.openapi.model"
   generateModelTests = true
   generateApiTests = true
   cleanupOutput = true
@@ -175,7 +175,6 @@ openApiGenerate {
           useSpringBoot3                : "true",
           implicitHeaders               : "false",
           performBeanValidation         : "true",
-          additionalModelTypeAnnotations: "@lombok.Builder;@lombok.AllArgsConstructor;@lombok.NoArgsConstructor",
           serializableModel             : "true",
           openApiNullable               : "false"
   ]
