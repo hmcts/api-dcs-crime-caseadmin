@@ -1,0 +1,523 @@
+openapi: 3.0.0
+servers:
+  - description: APIHub API Auto Mocking DCS case administration APIs
+    url: https://virtserver.swaggerhub.com/HMCTS-DTS/api-dcs-crime-caseadmin/0.0.0
+info:
+  version: 0.0.0
+  title: Digital Case System (DCS) case administration APIs
+  description: DCS Case Administration API Specification
+  contact:
+    email: no-reply@hmcts.com
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+components:
+  securitySchemes:
+    BearerAuth:
+      description: Valid Bearer Token
+      type: http
+      scheme: bearer
+  schemas:
+    uuid:
+      type: string
+      pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
+    datePattern:
+      type: string
+      pattern: ^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$
+    defendantPerson:
+      description: 'Individual representing the defendant'
+      type: object
+      properties:
+        forename:
+          type: string
+          description: Given Name
+          maxLength: 35
+        middleName:
+          type: string
+          description: Middle name
+          maxLength: 35
+        surname:
+          type: string
+          description: Surname or Family name
+          maxLength: 35
+        dateOfBirth:
+          allOf:
+            - $ref: '#/components/schemas/datePattern'
+            - description: "Defendant's date of birth"
+      required:
+        - forename
+        - surname
+        - dateOfBirth
+      additionalProperties: false
+    defendantOrganisation:
+      description: 'Organisation representing the defendant'
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of an organisation, e.g., Marks and Spencer.
+          maxLength: 255
+      required:
+        - organisationName
+      additionalProperties: false
+    defendant:
+      type: object
+      items:
+        properties:
+          id:
+            allOf:
+              - $ref: '#/components/schemas/uuid'
+              - description: "Unique identifier to track the ID of the defendant on the external system"
+          bailStatus:
+            type: string
+            description: "Bail status of the defendant"
+          intepreterLanguage:
+            type: string
+            description: "Language required from the interpreter"
+          interpreterInformation:
+            type: string
+            description: "Additional notes pertaining to interpreter"
+          defendantPerson:
+            $ref: '#/components/schemas/defendantPerson'
+          defendantOrganisation:
+            $ref: '#/components/schemas/defendantOrganisation'
+        required:
+          - id
+          - bailStatus
+          - oneOf
+            - defendantPerson
+            - defendantOrganisation
+      additionalProperties: false
+
+security:
+  - BearerAuth: []
+paths:
+  /case/{caseUrn}/defendants:
+    post:
+      summary: Submit case and defendant details
+      description: Sending case and defendant information
+      tags:
+        - Case and defendant details
+      parameters:
+        - in: path
+          name: caseUrn
+          description: The unique reference number identifying a case
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Case and defendant details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactionRef:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the specific message payload"
+                caseId:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the case on the external system"
+                caseReferral:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the case on the DCS system.  If this attribute is not supplied, DCS will infer it as a request to create the case file.  If this attribute is not present and case file exists on DCS, DCS will fail the request and provide an appropriate error message"
+                prosecutedBy:
+                  type: string
+                  description: "Prosecution Authority"
+                courtHouse:
+                  type: string
+                  description: "Hearing venue"
+                hearingDate:
+                  allOf:
+                    - $ref: '#/components/schemas/datePattern'
+                    - description: "Hearing date"
+                defendants:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/defendant'
+              required:
+                - transactionRef
+                - caseId
+                - prosecutedBy
+                - courtHouse
+                - defendant
+              additionalProperties: false
+            example:
+              transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
+              caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+              prosecutedBy: 'CPS'
+              courtHouse: 'Southwark'
+              hearingDate: '2025-01-21'
+              defendants:
+                - id: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905485'
+                  bailStatus: 'REMAND'
+                  interpreterLanguage: 'Urdu'
+                  interpreterInformation: "Random notes"
+                  defendantPerson:
+                    forename: 'John'
+                    middleName: 'Theodore'
+                    surname: 'SMITH'
+                    dateOfBirth: '1970-02-03'
+      responses:
+        '202':
+          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage:
+                    type: string
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                errorMessage: 'Case ID not valid'
+
+  /case/{caseUrn}/defendant/{defendantReferral}:
+    post:
+      summary: Send updated defendant details
+      description: Sending updated defendant information
+      tags:
+        - Case and defendant details
+      parameters:
+        - in: path
+          name: caseUrn
+          description: The unique reference number identifying a case
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: defendantReferral
+          description: The referral value identifying defendant in target system
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Defendant details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactionRef:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the specific message payload"
+                caseId:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the case on the CP system"
+                caseReferral:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the case on the DCS system"
+                defendant:
+                  $ref: '#/components/schemas/defendant'
+              required:
+                - transactionRef
+                - caseId
+                - caseReferral
+                - defendant
+              additionalProperties: false
+            example:
+              transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
+              caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+              caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+              defendant:
+                id: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905485'
+                bailStatus: 'REMAND'
+                interpreterLanguage: 'Urdu'
+                interpreterInformation: "Random notes"
+                defendantPerson: {
+                  forename: "John",
+                  middleName: "Theodore",
+                  surname: "SMITH",
+                  dateOfBirth: "1972-02-03"
+                }
+      responses:
+        '202':
+          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage:
+                    type: string
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                errorMessage: 'Case ID not valid'
+
+
+  /case/{caseUrn}/defendant/{defendantReferral}/defenceRepresentation:
+    post:
+      summary: Add defence representation
+      description: Adding defence representation
+      tags:
+        - Defence details for defendant
+      parameters:
+        - in: path
+          name: caseUrn
+          description: The unique reference number identifying a case
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: defendantReferral
+          description: The referral value identifying defendant in target system
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Defence representation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactionRef:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the specific message payload"
+                caseId:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the case on the external system"
+                action:
+                  type: string
+                  enum:
+                    - "Create"
+                    - "Update"
+                    - "Delete"
+                  description: "Create, Update or Delete defence representation"
+                  maxLength: 10
+                defenceRepresentation:
+                  type: object
+                  description: Representation details for the defendant
+                  properties:
+                    organisationName:
+                      type: string
+                      description: Name of the organisation
+                      maxLength: 50
+                    forename:
+                      type: string
+                      description: Given Name
+                      maxLength: 50
+                    surname:
+                      type: string
+                      description: Surname or Family name
+                      maxLength: 50
+                    email:
+                      type: string
+                      description:  email address (check on CP to see if its available)
+                      maxLength: 100
+                  required:
+                    - organisationName
+                    - email
+                  additionalProperties: false
+              required:
+                - transactionRef
+                - caseId
+                - action
+                - defenceRepresentation
+              additionalProperties: false
+            example:
+              transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
+              caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+              action: "Create"
+              defenceRepresentation:
+                {
+                  organisationName: "Ted & Co LLP",
+                  email: "jane@gmail.com"
+                }
+
+      responses:
+        '202':
+          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage:
+                    type: string
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                errorMessage: 'Case ID not valid'
+
+
+  /case/{caseUrn}/material:
+    post:
+      summary: Submit material
+      description: Upload a document and associate it with an existing case and (optionally) defendant
+      tags:
+        - Submit material
+      parameters:
+        - in: path
+          name: caseUrn
+          description: The unique reference number identifying a case
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Case Material Details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                caseReferral:
+                  type: string
+                  description: "referral link to the case"
+                defendantReferral:
+                  type: string
+                  description: "referral link to the defendant"
+                transactionRef:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the specific message payload "
+                caseId:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the case on the external system"
+                materialUrl:
+                  type: string
+                  description: "Link to material stored in azure storage container"
+                documentName:
+                  type: string
+                  description: "Document Name in source system "
+                documentDate:
+                  allOf:
+                    - $ref: '#/components/schemas/datePattern'
+                    - description: "date document was first uploaded into SOURCE system "
+                uploadedByUser:
+                  type: string
+                  description: "User id of person or system requesting the upload to DCS "
+                defendantId:
+                  type: string
+                  description: "An optional reference to the identity of the defendant within this prosecution case indicating this should be attached at the defendant level "
+                documentSection:
+                  type: string
+                  description: "The document section from within the SOURCE system "
+              required:
+                - caseReferral
+                - transactionRef
+                - caseId
+                - materialUrl
+                - documentName
+                - documentSection
+                - uploadedByUser
+              additionalProperties: false
+            example:
+              caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+              caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
+              transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+              materialUrl: 'https://azure.storage.com/some-material-reference'
+              documentName: 'Test file.pdf'
+              documentDate: '2025-01-01'
+              uploadedByUser: 'Common Platform'
+              documentSection: 'Exhibits'
+
+      responses:
+        '202':
+          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f74'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errorMessage:
+                    type: string
+                  transactionRef:
+                    type: string
+                    format: uuid
+                additionalProperties: false
+                required:
+                  - transactionRef
+              example:
+                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f74'
+                errorMessage: 'Case ID not valid'

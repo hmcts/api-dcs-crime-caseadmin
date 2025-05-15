@@ -21,8 +21,8 @@ class OpenAPIConfigurationLoaderTest {
 
         Info info = openAPI.getInfo();
         assertNotNull(info);
-        assertEquals("API CP Refdata Court Hearing Judges", info.getTitle());
-        assertEquals("Reference Data API providing information on Judges associated with a Court Hearing", info.getDescription());
+        assertEquals("Digital Case System (DCS) case administration APIs", info.getTitle());
+        assertEquals("DCS Case Administration API Specification", info.getDescription());
 
         String apiGitHubRepository = "api-dcs-crime-caseadmin";
         String expectedVersion = System.getProperty("API_SPEC_VERSION", "0.0.0");
