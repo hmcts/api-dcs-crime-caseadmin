@@ -14,18 +14,41 @@ def githubActor = project.findProperty("github.actor") ?: System.getenv("GITHUB_
 def githubToken = project.findProperty("github.token") ?: System.getenv("GITHUB_TOKEN")
 def githubRepo = System.getenv("GITHUB_REPOSITORY")
 
-//debugging
-//    if (githubActor != null) {
-//      println "🔐 Configuring GitHub Packages publishing to: https://maven.pkg.github.com/$githubRepo"
-//    }
-//    println "GitHub Packages publishing required environment variables:"
-//    println " - GITHUB_ACTOR=${githubActor != null ? '✔' : '❌'}"
-//    println " - GITHUB_TOKEN=${githubToken != null ? '✔' : '❌'}"
-//    println " - GITHUB_REPOSITORY=${githubRepo != null ? '✔' : '❌'}"
+def formatterUrl = 'https://raw.githubusercontent.com/hmcts/api-cp-code-style/refs/heads/master/config/formatter/eclipse-formatter.xml'
+def formatterPath = "$buildDir/eclipse-formatter.xml"
 
 java {
   sourceCompatibility = JavaVersion.VERSION_17
   targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url = 'https://jitpack.io'
+  }
+}
+
+openApiGenerate {
+  generatorName = "java"
+  inputSpec = "${rootDir}/src/main/resources/openapi/dcs-caseadmin.openapi.yml"
+  outputDir = "$buildDir/generated/sources/openapi"
+  modelPackage = "uk.gov.hmcts.dcs.openapi.model"
+
+  // Configuration options for the Java generator
+  configOptions = [
+          library: "jersey2", // Or "okhttp-gson"
+          dateLibrary: "java8", // Use Java 8 time API
+          //Ensure Jackson is used
+          serializationLibrary: "jackson",
+          useJakartaEe: "false", // To avoid Jakarta EE dependencies
+          sourceFolder: "src/main/java",
+          generateApis: "false",  // Generate only models
+          generateApiTests: "false",
+          generateModelTests: "false",
+          generateSupportingFiles: "false"
+  ]
 }
 
 sourceSets {
@@ -34,6 +57,23 @@ sourceSets {
       srcDir "$buildDir/generated/src/main/java"
     }
   }
+}
+
+dependencies {
+  implementation 'com.fasterxml.jackson.core:jackson-core:2.19.0'  // Use a compatible version
+//  implementation 'com.fasterxml.jackson.databind:jackson-databind:2.17.0'
+  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0' // For Java 8 date/time
+  implementation 'org.slf4j:slf4j-api:2.0.12'
+  implementation 'ch.qos.logback:logback-classic:1.5.3'
+  //If you use the validation, also add this
+  implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+  implementation 'io.swagger.parser.v3:swagger-parser:2.1.27'
+  implementation 'io.swagger.core.v3:swagger-annotations:2.2.30'
+
+  testImplementation(platform('org.junit:junit-bom:5.12.2'))
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -81,14 +121,6 @@ tasks.named("dependencyUpdates").configure {
   }
   rejectVersionIf {
     isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)
-  }
-}
-
-repositories {
-  mavenLocal()
-  mavenCentral()
-  maven {
-    url = 'https://jitpack.io'
   }
 }
 
@@ -147,45 +179,30 @@ jar {
   }
 }
 
-def inputSpecFile = fileTree("src/main/resources/openapi").matching {
-  include("*.openapi.yml")
-}.singleFile
-
-tasks.named("openApiGenerate") {
-  inputs.file(inputSpecFile)
-}
-
-openApiGenerate {
-  generatorName = "spring"
-  inputSpec = inputSpecFile.absolutePath
-  outputDir = "$buildDir/generated"
-  apiPackage = "uk.gov.hmcts.dcs.openapi.api"
-  modelPackage = "uk.gov.hmcts.dcs.openapi.model"
-  generateModelTests = true
-  generateApiTests = true
-  cleanupOutput = true
-  configOptions = [
-          validateSpec                  : "true",
-          dateLibrary                   : "java8",
-          interfaceOnly                 : "true",
-          hideGenerationTimestamp       : "true",
-          useJakartaEe                  : "true",
-          useBeanValidation             : "true",
-          useTags                       : "true",
-          useSpringBoot3                : "true",
-          implicitHeaders               : "false",
-          performBeanValidation         : "true",
-          serializableModel             : "true",
-          openApiNullable               : "false"
-  ]
+spotless {
+  java {
+    target 'build/generated/sources/openapi/src/main/**/*.java'
+    removeUnusedImports()
+    eclipse().configFile(formatterPath)
+  }
 }
 
 tasks.named('compileJava') {
   dependsOn tasks.named('spotlessApply')
 }
 
-def formatterUrl = 'https://raw.githubusercontent.com/hmcts/api-cp-code-style/refs/heads/master/config/formatter/eclipse-formatter.xml'
-def formatterPath = "$buildDir/eclipse-formatter.xml"
+tasks.named("openApiGenerate") {
+  inputs.file("${rootDir}/src/main/resources/openapi/dcs-caseadmin.openapi.yml")
+}
+
+tasks.named('spotlessApply') {
+  dependsOn tasks.named('openApiGenerate'), tasks.named('downloadFormatter')
+}
+
+tasks.named('spotlessJava') {
+  dependsOn tasks.named('openApiGenerate'), tasks.named('downloadFormatter')
+}
+
 tasks.register('downloadFormatter') {
   outputs.file(formatterPath)
   doLast {
@@ -194,48 +211,10 @@ tasks.register('downloadFormatter') {
     file.text = new URI(formatterUrl).toURL().text
   }
 }
-spotless {
-  java {
-    target 'build/generated/src/main/**/*.java'
-    removeUnusedImports()
-    eclipse().configFile(formatterPath)
-  }
-}
-
-tasks.named('spotlessApply') {
-  dependsOn tasks.named('openApiGenerate'), tasks.named('downloadFormatter')
-}
-tasks.named('spotlessJava') {
-  dependsOn tasks.named('openApiGenerate'), tasks.named('downloadFormatter')
-}
 
 tasks.withType(Checkstyle).configureEach {
-  def generatedDir = file("${buildDir}/generated/src/main/java").canonicalPath
+  def generatedDir = file("${buildDir}/generated/sources/openapi/src/main/java").canonicalPath
   source = source.filter { file ->
     !file.canonicalPath.startsWith(generatedDir)
   }
-}
-
-ext {
-  springBootVersion = "3.4.5"
-  lombokVersion = "1.18.38"
-}
-
-dependencies {
-  // OpenAPI Generator runtime support
-  implementation 'org.openapitools:openapi-generator-core:7.13.0'
-  implementation 'io.swagger.parser.v3:swagger-parser:2.1.27'
-  implementation 'io.swagger.core.v3:swagger-annotations:2.2.32'
-  implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
-
-  implementation 'com.fasterxml.jackson.core:jackson-annotations:2.19.0'
-  implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-  implementation "org.springframework.boot:spring-boot-starter-validation:$springBootVersion"
-  compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
-  annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
-
-  testImplementation(platform('org.junit:junit-bom:5.12.2'))
-  testImplementation 'org.junit.jupiter:junit-jupiter-api'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
