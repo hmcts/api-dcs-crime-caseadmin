@@ -48,7 +48,6 @@ components:
         - forename
         - surname
         - dateOfBirth
-      additionalProperties: false
     defendantOrganisation:
       description: 'Organisation representing the defendant'
       type: object
@@ -59,7 +58,6 @@ components:
           maxLength: 255
       required:
         - organisationName
-      additionalProperties: false
     defendant:
       type: object
       items:
@@ -71,7 +69,7 @@ components:
           bailStatus:
             type: string
             description: "Bail status of the defendant"
-          intepreterLanguage:
+          interpreterLanguage:
             type: string
             description: "Language required from the interpreter"
           interpreterInformation:
@@ -87,7 +85,6 @@ components:
           - oneOf
             - defendantPerson
             - defendantOrganisation
-      additionalProperties: false
 
 paths:
   /case/{caseUrn}/defendants:
@@ -143,8 +140,7 @@ paths:
                 - caseId
                 - prosecutedBy
                 - courtHouse
-                - defendant
-              additionalProperties: false
+                - defendants
             example:
               transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
               caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
@@ -172,7 +168,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
@@ -189,7 +184,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
@@ -243,7 +237,6 @@ paths:
                 - caseId
                 - caseReferral
                 - defendant
-              additionalProperties: false
             example:
               transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
               caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
@@ -270,7 +263,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
@@ -287,7 +279,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
@@ -362,13 +353,11 @@ paths:
                   required:
                     - organisationName
                     - email
-                  additionalProperties: false
               required:
                 - transactionRef
                 - caseId
                 - action
                 - defenceRepresentation
-              additionalProperties: false
             example:
               transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
               caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
@@ -390,7 +379,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
@@ -407,7 +395,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
@@ -478,7 +465,6 @@ paths:
                 - documentName
                 - documentSection
                 - uploadedByUser
-              additionalProperties: false
             example:
               caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
               caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
@@ -500,7 +486,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
@@ -517,7 +502,6 @@ paths:
                   transactionRef:
                     type: string
                     format: uuid
-                additionalProperties: false
                 required:
                   - transactionRef
               example:
