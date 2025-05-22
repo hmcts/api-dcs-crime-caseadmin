@@ -60,31 +60,30 @@ components:
         - organisationName
     defendant:
       type: object
-      items:
-        properties:
-          id:
-            allOf:
-              - $ref: '#/components/schemas/uuid'
-              - description: "Unique identifier to track the ID of the defendant on the external system"
-          bailStatus:
-            type: string
-            description: "Bail status of the defendant"
-          interpreterLanguage:
-            type: string
-            description: "Language required from the interpreter"
-          interpreterInformation:
-            type: string
-            description: "Additional notes pertaining to interpreter"
-          defendantPerson:
-            $ref: '#/components/schemas/defendantPerson'
-          defendantOrganisation:
-            $ref: '#/components/schemas/defendantOrganisation'
-        required:
-          - id
-          - bailStatus
-          - oneOf
-            - defendantPerson
-            - defendantOrganisation
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+            - description: "Unique identifier to track the ID of the defendant on the external system"
+        bailStatus:
+          type: string
+          description: "Bail status of the defendant"
+        interpreterLanguage:
+          type: string
+          description: "Language required from the interpreter"
+        interpreterInformation:
+          type: string
+          description: "Additional notes pertaining to interpreter"
+        defendantPerson:
+          $ref: '#/components/schemas/defendantPerson'
+        defendantOrganisation:
+          $ref: '#/components/schemas/defendantOrganisation'
+      required:
+        - id
+        - bailStatus
+        - oneOf
+          - defendantPerson
+          - defendantOrganisation
 
 paths:
   /case/{caseUrn}/defendants:
