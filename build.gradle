@@ -10,9 +10,14 @@ plugins {
 
 group = 'uk.gov.hmcts.dcs'
 version = System.getProperty('API_SPEC_VERSION') ?: '0.0.999'
+
 def githubActor = project.findProperty("github.actor") ?: System.getenv("GITHUB_ACTOR")
 def githubToken = project.findProperty("github.token") ?: System.getenv("GITHUB_TOKEN")
 def githubRepo = System.getenv("GITHUB_REPOSITORY")
+
+def azureADOArtifactRepository = 'https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/hmcts-lib/maven/v1'
+def azureADOArtifactActor = System.getenv("AZURE_DEVOPS_ARTIFACT_USERNAME")
+def azureADOArtifactToken = System.getenv("AZURE_DEVOPS_ARTIFACT_TOKEN")
 
 def formatterUrl = 'https://raw.githubusercontent.com/hmcts/api-cp-code-style/refs/heads/master/config/formatter/eclipse-formatter.xml'
 def formatterPath = "${layout.buildDirectory.get().asFile.absolutePath}/eclipse-formatter.xml"
