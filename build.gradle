@@ -5,7 +5,7 @@ plugins {
   id 'jacoco'
   id 'maven-publish'
   id "com.github.ben-manes.versions" version "0.52.0"
-  id "org.cyclonedx.bom" version "2.3.0"
+  id "org.cyclonedx.bom" version "2.3.1"
 }
 
 group = 'uk.gov.hmcts.dcs'
@@ -15,25 +15,17 @@ def githubToken = project.findProperty("github.token") ?: System.getenv("GITHUB_
 def githubRepo = System.getenv("GITHUB_REPOSITORY")
 
 def formatterUrl = 'https://raw.githubusercontent.com/hmcts/api-cp-code-style/refs/heads/master/config/formatter/eclipse-formatter.xml'
-def formatterPath = "$buildDir/eclipse-formatter.xml"
+def formatterPath = "${layout.buildDirectory.get().asFile.absolutePath}/eclipse-formatter.xml"
 
 java {
   sourceCompatibility = JavaVersion.VERSION_17
   targetCompatibility = JavaVersion.VERSION_17
 }
 
-repositories {
-  mavenLocal()
-  mavenCentral()
-  maven {
-    url = 'https://jitpack.io'
-  }
-}
-
 openApiGenerate {
   generatorName = "java"
   inputSpec = "${rootDir}/src/main/resources/openapi/dcs-caseadmin.openapi.yml"
-  outputDir = "$buildDir/generated/sources/openapi"
+  outputDir = "${layout.buildDirectory.get().asFile.absolutePath}/generated/sources/openapi"
   modelPackage = "uk.gov.hmcts.dcs.openapi.model"
 
   // Configuration options for the Java generator
@@ -55,7 +47,7 @@ openApiGenerate {
 sourceSets {
   main {
     java {
-      srcDir "$buildDir/generated/sources/openapi/src/main/java"
+      srcDir "${layout.buildDirectory.get().asFile.absolutePath}/generated/sources/openapi/src/main/java"
     }
   }
 }
@@ -127,6 +119,14 @@ tasks.named("dependencyUpdates").configure {
   }
 }
 
+repositories {
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url = azureADOArtifactRepository
+  }
+}
+
 publishing {
   publications {
     mavenJava(MavenPublication) {
@@ -142,6 +142,14 @@ publishing {
         password = githubToken
       }
     }
+    maven {
+      name = "AzureArtifacts"
+      url = uri(azureADOArtifactRepository)
+      credentials {
+        username = azureADOArtifactActor
+        password = azureADOArtifactToken
+      }
+    }
   }
 }
 
@@ -153,7 +161,7 @@ cyclonedxBom {
   skipConfigs = ["test", "testImplementation"]
   schemaVersion = "1.6"
   componentVersion = providers.provider { project.version.toString() }
-  destination = file("$buildDir/reports")
+  destination = file("${layout.buildDirectory.get().asFile.absolutePath}/reports")
   includeBuildSystem = true
   outputName = "bom"
   outputFormat = "json"
@@ -169,8 +177,7 @@ jar {
   } else {
     println "⚠️  CHANGELOG.md not found, skipping inclusion in JAR"
   }
-
-  def sbomFile = file("$buildDir/reports/bom.json")
+  def sbomFile = file("${layout.buildDirectory.get().asFile.absolutePath}/reports/bom.json")
   if (sbomFile.exists()) {
     println "✅ Including SBOM from ${sbomFile} in JAR"
     from(sbomFile) {
@@ -216,7 +223,7 @@ tasks.register('downloadFormatter') {
 }
 
 tasks.withType(Checkstyle).configureEach {
-  def generatedDir = file("${buildDir}/generated/sources/openapi/src/main/java").canonicalPath
+  def generatedDir = file("${layout.buildDirectory.get().asFile.absolutePath}/generated/sources/openapi/src/main/java").canonicalPath
   source = source.filter { file ->
     !file.canonicalPath.startsWith(generatedDir)
   }
