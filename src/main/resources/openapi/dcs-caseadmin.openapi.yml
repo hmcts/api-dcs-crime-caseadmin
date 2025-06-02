@@ -84,6 +84,28 @@ components:
         - oneOf
           - defendantPerson
           - defendantOrganisation
+    responsePayload:
+      description: 'Payload representing the response from the synchronous API call'
+      type: object
+      properties:
+        transactionRef:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+            - description: "Unique identifier to track the specific message payload"
+        errorCode:
+          type: string
+          enum:
+            - "CASE_ALREADY_EXISTS"
+            - "DEFENDANT_ALREADY_EXISTS"
+            - "CASE_NOT_FOUND"
+            - "DEFENDANT_NOT_FOUND"
+          description: "Error code if the request failed"
+        errorMessage:
+          type: string
+          description: "Additional detail information about the error"
+          maxLength: 255
+      required:
+        - transactionRef
 
 paths:
   /case/{caseUrn}/defendants:
@@ -176,18 +198,18 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  errorMessage:
-                    type: string
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
-              example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
-                errorMessage: 'Case ID not valid'
+                $ref: '#/components/schemas/responsePayload'
+              examples:
+                caseExists:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'CASE_ALREADY_EXISTS'
+                    errorMessage: 'Case already exists'
+                defExists:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'DEFENDANT_ALREADY_EXISTS'
+                    errorMessage: 'Defendant already exists'
 
   /case/{caseUrn}/defendant/{defendantReferral}:
     post:
@@ -257,13 +279,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
+                $ref: '#/components/schemas/responsePayload'
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
         '400':
@@ -271,18 +287,28 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  errorMessage:
-                    type: string
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
+                $ref: '#/components/schemas/responsePayload'
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                errorCode: 'CASE_NOT_FOUND'
                 errorMessage: 'Case ID not valid'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responsePayload'
+              examples:
+                caseDoesNotExist:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'CASE_NOT_FOUND'
+                    errorMessage: 'Case not found'
+                defDoesNotExist:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'DEFENDANT_NOT_FOUND'
+                    errorMessage: 'Defendant not found'
 
 
   /case/{caseUrn}/defendant/{defendantReferral}/defenceRepresentation:
@@ -324,9 +350,9 @@ paths:
                 action:
                   type: string
                   enum:
-                    - "Create"
-                    - "Update"
-                    - "Delete"
+                    - "CREATE"
+                    - "UPDATE"
+                    - "DELETE"
                   description: "Create, Update or Delete defence representation"
                   maxLength: 10
                 defenceRepresentation:
@@ -360,7 +386,7 @@ paths:
             example:
               transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
               caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
-              action: "Create"
+              action: "CREATE"
               defenceRepresentation:
                 {
                   organisationName: "Ted & Co LLP",
@@ -369,17 +395,11 @@ paths:
 
       responses:
         '202':
-          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
+          description: Success. Defence representation added
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
+                $ref: '#/components/schemas/responsePayload'
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
         '400':
@@ -399,6 +419,23 @@ paths:
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
                 errorMessage: 'Case ID not valid'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responsePayload'
+              examples:
+                caseDoesNotExist  :
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'CASE_NOT_FOUND'
+                    errorMessage: 'Case not found'
+                defDoesNotExists:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'DEFENDANT_NOT_FOUND'
+                    errorMessage: 'Defendant not found'
 
 
   /case/{caseUrn}/material:
@@ -480,13 +517,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
+                $ref: '#/components/schemas/responsePayload'
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f74'
         '400':
@@ -494,15 +525,8 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  errorMessage:
-                    type: string
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
+                $ref: '#/components/schemas/responsePayload'
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f74'
+                errorCode: 'CASE_NOT_FOUND'
                 errorMessage: 'Case ID not valid'
