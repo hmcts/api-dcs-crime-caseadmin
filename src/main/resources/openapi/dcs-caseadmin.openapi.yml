@@ -84,8 +84,45 @@ components:
         - oneOf
           - defendantPerson
           - defendantOrganisation
-    responsePayload:
+    requestFulfilledResponsePayload:
       description: 'Payload representing the response from the synchronous API call'
+      type: object
+      properties:
+        transactionRef:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+            - description: "Unique identifier to track the specific message payload"
+        caseId:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+            - description: "Unique identifier to track the ID of the case on the CP system"
+        caseReferral:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+            - description: "Unique identifier to track the ID of the case on the external system"
+        defendants:
+          type: array
+          items:
+            type: object
+            properties:
+              defendantId:
+                allOf:
+                  - $ref: '#/components/schemas/uuid'
+                  - description: "Unique identifier to track the ID of the defendant on the CP system"
+              defendantReferral:
+                allOf:
+                  - $ref: '#/components/schemas/uuid'
+                  - description: "Unique identifier to track the ID of the defendant on the DCS system"
+            required:
+              - defendantId
+              - defendantReferral
+      required:
+        - transactionRef
+        - caseId
+        - caseReferral
+        - defendants
+    errorResponsePayload:
+      description: 'Payload representing the error response from the synchronous API call'
       type: object
       properties:
         transactionRef:
@@ -99,6 +136,9 @@ components:
             - "DEFENDANT_ALREADY_EXISTS"
             - "CASE_NOT_FOUND"
             - "DEFENDANT_NOT_FOUND"
+            - "CASE_NOT_CREATED"
+            - "DEFENDANT_NOT_CREATED"
+            - "DEFENDANT_NOT_UPDATED"
           description: "Error code if the request failed"
         errorMessage:
           type: string
@@ -106,6 +146,8 @@ components:
           maxLength: 255
       required:
         - transactionRef
+        - errorCode
+        - errorMessage
 
 paths:
   /case/{caseUrn}/defendants:
@@ -179,26 +221,27 @@ paths:
                     surname: 'SMITH'
                     dateOfBirth: '1970-02-03'
       responses:
-        '202':
-          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
+        '201':
+          description: Created. Case and defendant details successfully created and linked
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
-              example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                $ref: '#/components/schemas/requestFulfilledResponsePayload'
+              examples:
+                linkedCaseAndDefendant:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    caseId: '8191c165-e9e4-4fd7-ac6d-5bfd04690f78'
+                    caseReferral: '8191c165-e9e4-4fd7-ac6d-5bfd04690f79'
+                    defendants:
+                      - defendantId: '8191c165-e9e4-4fd7-ac6d-5bfd04690f80'
+                        defendantReferral: '8191c165-e9e4-4fd7-ac6d-5bfd04690f81'
         '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/responsePayload'
+                $ref: '#/components/schemas/errorResponsePayload'
               examples:
                 caseExists:
                   value:
@@ -274,30 +317,25 @@ paths:
                   dateOfBirth: "1972-02-03"
                 }
       responses:
-        '202':
-          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/responsePayload'
-              example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+        '204':
+          description: Response indicating that the defendant details were successfully updated
+          content: {}
         '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/responsePayload'
+                $ref: '#/components/schemas/errorResponsePayload'
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
                 errorCode: 'CASE_NOT_FOUND'
                 errorMessage: 'Case ID not valid'
         '404':
-          description: Bad Request
+          description: Resource Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/responsePayload'
+                $ref: '#/components/schemas/errorResponsePayload'
               examples:
                 caseDoesNotExist:
                   value:
@@ -373,7 +411,7 @@ paths:
                       maxLength: 50
                     email:
                       type: string
-                      description:  email address (check on CP to see if its available)
+                      description: email address (check on CP to see if its available)
                       maxLength: 100
                   required:
                     - organisationName
@@ -394,39 +432,29 @@ paths:
                 }
 
       responses:
-        '202':
-          description: Success. Defence representation added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/responsePayload'
-              example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+        '204':
+          description: Success. Defence representation added or updated or removed
+          content: {}
         '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  errorMessage:
-                    type: string
-                  transactionRef:
-                    type: string
-                    format: uuid
-                required:
-                  - transactionRef
-              example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
-                errorMessage: 'Case ID not valid'
+                $ref: '#/components/schemas/errorResponsePayload'
+              examples:
+                caseDoesNotExist:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'CASE_NOT_FOUND'
+                    errorMessage: 'Case not found'
         '404':
-          description: Bad Request
+          description: Resource Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/responsePayload'
+                $ref: '#/components/schemas/errorResponsePayload'
               examples:
-                caseDoesNotExist  :
+                caseDoesNotExist:
                   value:
                     transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
                     errorCode: 'CASE_NOT_FOUND'
@@ -513,19 +541,14 @@ paths:
 
       responses:
         '202':
-          description: Accepted. Response contains details of the status of the request for this submission - ids required to check the status of the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/responsePayload'
-              example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f74'
+          description: Accepted material submission for processing
+          content: {}
         '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/responsePayload'
+                $ref: '#/components/schemas/errorResponsePayload'
               example:
                 transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f74'
                 errorCode: 'CASE_NOT_FOUND'
