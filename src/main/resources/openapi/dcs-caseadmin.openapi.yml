@@ -47,7 +47,6 @@ components:
       required:
         - forename
         - surname
-        - dateOfBirth
     defendantOrganisation:
       description: 'Organisation representing the defendant'
       type: object
@@ -148,6 +147,16 @@ components:
         - transactionRef
         - errorCode
         - errorMessage
+    badRequestErrorResponsePayload:
+      description: 'Payload representing the error response for bad requests'
+      type: object
+      properties:
+        errorMessage:
+          type: string
+          description: "Additional detail information about the error"
+          maxLength: 255
+      required:
+        - errorMessage
 
 paths:
   /case/{caseUrn}/defendants:
@@ -241,6 +250,14 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/badRequestErrorResponsePayload'
+              example:
+                errorMessage: 'Case ID not valid'
+        '404':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/errorResponsePayload'
               examples:
                 caseExists:
@@ -325,10 +342,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/errorResponsePayload'
+                $ref: '#/components/schemas/badRequestErrorResponsePayload'
               example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
-                errorCode: 'CASE_NOT_FOUND'
                 errorMessage: 'Case ID not valid'
         '404':
           description: Resource Not Found
@@ -440,13 +455,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/errorResponsePayload'
-              examples:
-                caseDoesNotExist:
-                  value:
-                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
-                    errorCode: 'CASE_NOT_FOUND'
-                    errorMessage: 'Case not found'
+                $ref: '#/components/schemas/badRequestErrorResponsePayload'
+              example:
+                errorMessage: 'Case ID not valid'
         '404':
           description: Resource Not Found
           content:
@@ -488,12 +499,6 @@ paths:
             schema:
               type: object
               properties:
-                caseReferral:
-                  type: string
-                  description: "referral link to the case"
-                defendantReferral:
-                  type: string
-                  description: "referral link to the defendant"
                 transactionRef:
                   allOf:
                     - $ref: '#/components/schemas/uuid'
@@ -502,6 +507,9 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/uuid'
                     - description: "Unique identifier to track the ID of the case on the external system"
+                caseReferral:
+                  type: string
+                  description: "referral link to the case"
                 materialUrl:
                   type: string
                   description: "Link to material stored in azure storage container"
@@ -518,6 +526,9 @@ paths:
                 defendantId:
                   type: string
                   description: "An optional reference to the identity of the defendant within this prosecution case indicating this should be attached at the defendant level "
+                defendantReferral:
+                  type: string
+                  description: "referral link to the defendant"
                 documentSection:
                   type: string
                   description: "The document section from within the SOURCE system "
@@ -548,8 +559,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/errorResponsePayload'
+                $ref: '#/components/schemas/badRequestErrorResponsePayload'
               example:
-                transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f74'
-                errorCode: 'CASE_NOT_FOUND'
                 errorMessage: 'Case ID not valid'
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponsePayload'
+              examples:
+                caseDoesNotExist:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'CASE_NOT_FOUND'
+                    errorMessage: 'Case not found'
+                defDoesNotExists:
+                  value:
+                    transactionRef: '8191c165-e9e4-4fd7-ac6d-5bfd04690f77'
+                    errorCode: 'DEFENDANT_NOT_FOUND'
+                    errorMessage: 'Defendant not found'
