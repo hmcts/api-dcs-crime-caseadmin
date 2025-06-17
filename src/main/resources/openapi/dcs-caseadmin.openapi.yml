@@ -79,7 +79,6 @@ components:
           $ref: '#/components/schemas/defendantOrganisation'
       required:
         - id
-        - bailStatus
         - oneOf
           - defendantPerson
           - defendantOrganisation
@@ -196,6 +195,10 @@ paths:
                 prosecutedBy:
                   type: string
                   description: "Prosecution Authority"
+                  enum:
+                    - "CPS"
+                    - "PROBATION"
+                    - "OTHER"
                 courtHouse:
                   type: string
                   description: "Hearing venue"
