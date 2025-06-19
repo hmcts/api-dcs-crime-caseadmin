@@ -64,6 +64,20 @@ components:
           allOf:
             - $ref: '#/components/schemas/uuid'
             - description: "Unique identifier to track the ID of the defendant on the external system"
+        hearings:
+          type: array
+          items:
+            type: object
+            properties:
+              hearingDate:
+                allOf:
+                  - $ref: '#/components/schemas/datePattern'
+                  - description: "Future hearing date for the defendant"
+              courtHouse:
+                type: string
+                description: "Future hearing venue for the defendant"
+            required:
+              - courtHouse
         bailStatus:
           type: string
           description: "Bail status of the defendant"
@@ -199,13 +213,6 @@ paths:
                     - "CPS"
                     - "PROBATION"
                     - "OTHER"
-                courtHouse:
-                  type: string
-                  description: "Hearing venue"
-                hearingDate:
-                  allOf:
-                    - $ref: '#/components/schemas/datePattern'
-                    - description: "Hearing date"
                 defendants:
                   type: array
                   items:
@@ -214,7 +221,6 @@ paths:
                 - transactionRef
                 - caseId
                 - prosecutedBy
-                - courtHouse
                 - defendants
             example:
               transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
