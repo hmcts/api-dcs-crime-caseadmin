@@ -226,13 +226,14 @@ paths:
               transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
               caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
               prosecutedBy: 'CPS'
-              courtHouse: 'Southwark'
-              hearingDate: '2025-01-21'
               defendants:
                 - id: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905485'
                   bailStatus: 'REMAND'
                   interpreterLanguage: 'Urdu'
                   interpreterInformation: "Random notes"
+                  hearings:
+                    - courtHouse: 'Southwark'
+                      hearingDate: '2025-01-21'
                   defendantPerson:
                     forename: 'John'
                     middleName: 'Theodore'
