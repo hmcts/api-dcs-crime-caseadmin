@@ -537,6 +537,14 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/uuid'
                     - description: "Unique identifier to track the ID of the case on the external system"
+                materialId:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the material on the external system"
+                checksum:
+                  allOf:
+                    - type: string
+                    - description: "Checksum of the material file to be uploaded"
                 caseReferral:
                   type: string
                   description: "referral link to the case"
@@ -564,6 +572,7 @@ paths:
                 - caseReferral
                 - transactionRef
                 - caseId
+                - materialId
                 - materialUrl
                 - documentName
                 - documentSection
