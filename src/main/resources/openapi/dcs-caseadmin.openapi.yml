@@ -24,6 +24,19 @@ components:
     datePattern:
       type: string
       pattern: ^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$
+    hearing:
+      description: 'Hearing details for the defendant'
+      type: object
+      properties:
+        hearingDate:
+          allOf:
+            - $ref: '#/components/schemas/datePattern'
+            - description: "Future hearing date for the defendant"
+        courtHouse:
+          type: string
+          description: "Future hearing venue for the defendant"
+      required:
+        - courtHouse
     defendantPerson:
       description: 'Individual representing the defendant'
       type: object
@@ -67,17 +80,7 @@ components:
         hearings:
           type: array
           items:
-            type: object
-            properties:
-              hearingDate:
-                allOf:
-                  - $ref: '#/components/schemas/datePattern'
-                  - description: "Future hearing date for the defendant"
-              courtHouse:
-                type: string
-                description: "Future hearing venue for the defendant"
-            required:
-              - courtHouse
+            $ref: '#/components/schemas/hearing'
         bailStatus:
           type: string
           description: "Bail status of the defendant"
@@ -96,6 +99,43 @@ components:
         - oneOf
           - defendantPerson
           - defendantOrganisation
+    defendantMetadata:
+      type: object
+      properties:
+        defendantId:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+            - description: "Unique identifier to track the ID of the defendant on the CP system"
+        defendantReferral:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+            - description: "Unique identifier to track the ID of the defendant on the DCS system"
+      required:
+        - defendantId
+        - defendantReferral
+    defenceRepresentation:
+      type: object
+      description: Representation details for the defendant
+      properties:
+        organisationName:
+          type: string
+          description: Name of the organisation
+          maxLength: 50
+        forename:
+          type: string
+          description: Given Name
+          maxLength: 50
+        surname:
+          type: string
+          description: Surname or Family name
+          maxLength: 50
+        email:
+          type: string
+          description: email address (check on CP to see if its available)
+          maxLength: 100
+      required:
+        - organisationName
+        - email
     requestFulfilledResponsePayload:
       description: 'Payload representing the response from the synchronous API call'
       type: object
@@ -151,6 +191,7 @@ components:
             - "CASE_NOT_CREATED"
             - "DEFENDANT_NOT_CREATED"
             - "DEFENDANT_NOT_UPDATED"
+            - "CASE_HAS_SPLIT_OR_MERGED"
           description: "Error code if the request failed"
         errorMessage:
           type: string
@@ -419,28 +460,7 @@ paths:
                   description: "Create, Update or Delete defence representation"
                   maxLength: 10
                 defenceRepresentation:
-                  type: object
-                  description: Representation details for the defendant
-                  properties:
-                    organisationName:
-                      type: string
-                      description: Name of the organisation
-                      maxLength: 50
-                    forename:
-                      type: string
-                      description: Given Name
-                      maxLength: 50
-                    surname:
-                      type: string
-                      description: Surname or Family name
-                      maxLength: 50
-                    email:
-                      type: string
-                      description: email address (check on CP to see if its available)
-                      maxLength: 100
-                  required:
-                    - organisationName
-                    - email
+                  $ref: '#/components/schemas/defenceRepresentation'
               required:
                 - transactionRef
                 - caseId
@@ -533,12 +553,10 @@ paths:
                 uploadedByUser:
                   type: string
                   description: "User id of person or system requesting the upload to DCS "
-                defendantId:
-                  type: string
-                  description: "An optional reference to the identity of the defendant within this prosecution case indicating this should be attached at the defendant level "
-                defendantReferral:
-                  type: string
-                  description: "referral link to the defendant"
+                defendants:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/defendantMetadata'
                 documentSection:
                   type: string
                   description: "The document section from within the SOURCE system "
@@ -550,15 +568,30 @@ paths:
                 - documentName
                 - documentSection
                 - uploadedByUser
-            example:
-              caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
-              caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
-              transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
-              materialUrl: 'https://azure.storage.com/some-material-reference'
-              documentName: 'Test file.pdf'
-              documentDate: '2025-01-01'
-              uploadedByUser: 'Common Platform'
-              documentSection: 'Exhibits'
+            examples:
+              caseLevelDocument:
+                value:
+                  caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+                  caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
+                  transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+                  materialUrl: 'https://azure.storage.com/some-material-reference'
+                  documentName: 'Test file.pdf'
+                  documentDate: '2025-01-01'
+                  uploadedByUser: 'Common Platform'
+                  documentSection: 'Exhibits'
+              defendantLevelDocument:
+                value:
+                  caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+                  caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
+                  transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+                  materialUrl: 'https://azure.storage.com/some-material-reference'
+                  documentName: 'Test file.pdf'
+                  documentDate: '2025-01-01'
+                  uploadedByUser: 'Common Platform'
+                  documentSection: 'Exhibits'
+                  defendants:
+                    - defendantId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905485'
+                      defendantReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905486'
 
       responses:
         '202':
