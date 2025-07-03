@@ -581,6 +581,7 @@ paths:
               caseLevelDocument:
                 value:
                   caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+                  materialId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
                   caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
                   transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
                   materialUrl: 'https://azure.storage.com/some-material-reference'
@@ -591,6 +592,7 @@ paths:
               defendantLevelDocument:
                 value:
                   caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
+                  materialId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
                   caseReferral: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
                   transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
                   materialUrl: 'https://azure.storage.com/some-material-reference'
