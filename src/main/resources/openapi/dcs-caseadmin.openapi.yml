@@ -192,6 +192,8 @@ components:
             - "DEFENDANT_NOT_CREATED"
             - "DEFENDANT_NOT_UPDATED"
             - "CASE_HAS_SPLIT_OR_MERGED"
+            - "DOCUMENT_CONTAINS_VIRUS"
+            - "DOCUMENT_NOT_UPLOADED"
           description: "Error code if the request failed"
         errorMessage:
           type: string
