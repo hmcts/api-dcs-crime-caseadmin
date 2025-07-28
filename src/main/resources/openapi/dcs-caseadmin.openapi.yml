@@ -194,6 +194,7 @@ components:
             - "CASE_HAS_SPLIT_OR_MERGED"
             - "DOCUMENT_CONTAINS_VIRUS"
             - "DOCUMENT_NOT_UPLOADED"
+            - "CASE_DELETED"
           description: "Error code if the request failed"
         errorMessage:
           type: string
@@ -453,6 +454,10 @@ paths:
                   allOf:
                     - $ref: '#/components/schemas/uuid'
                     - description: "Unique identifier to track the ID of the case on the external system"
+                caseReferral:
+                  allOf:
+                    - $ref: '#/components/schemas/uuid'
+                    - description: "Unique identifier to track the ID of the case on the external system"
                 action:
                   type: string
                   enum:
@@ -468,6 +473,7 @@ paths:
                 - caseId
                 - action
                 - defenceRepresentation
+                - caseReferral
             example:
               transactionRef: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905483'
               caseId: 'd9fe4c51-1783-4fe4-a2b4-7c0e25905484'
