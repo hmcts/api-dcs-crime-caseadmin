@@ -1,7 +1,7 @@
 plugins {
   id 'java'
   id 'org.openapi.generator' version '7.14.0'
-  id 'com.diffplug.spotless' version '7.0.4'
+  id 'com.diffplug.spotless' version '7.1.0'
   id 'jacoco'
   id 'maven-publish'
   id "com.github.ben-manes.versions" version "0.52.0"
@@ -58,19 +58,19 @@ sourceSets {
 }
 
 dependencies {
-  implementation 'com.fasterxml.jackson.core:jackson-core:2.19.1'  // Use a compatible version
-  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.1' // For Java 8 date/time
+  implementation 'com.fasterxml.jackson.core:jackson-core:2.19.2'  // Use a compatible version
+  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2' // For Java 8 date/time
   implementation 'org.slf4j:slf4j-api:2.0.17'
   implementation 'ch.qos.logback:logback-classic:1.5.18'
   //If you use the validation, also add this
-  implementation 'io.swagger.parser.v3:swagger-parser:2.1.30'
+  implementation 'io.swagger.parser.v3:swagger-parser:2.1.31'
   implementation 'io.swagger.core.v3:swagger-annotations:2.2.34'
 
   implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
   implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 
-  testImplementation(platform('org.junit:junit-bom:5.13.2'))
+  testImplementation(platform('org.junit:junit-bom:5.13.3'))
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
