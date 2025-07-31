@@ -195,6 +195,13 @@ components:
             - "DOCUMENT_CONTAINS_VIRUS"
             - "DOCUMENT_NOT_UPLOADED"
             - "CASE_DELETED"
+            - "CASE_LINK_NOT_FOUND"
+            - "DEFENDANT_LINK_NOT_FOUND"
+            - "DEFENDANT_DELETED"
+            - "DEFENCE_NOT_FOUND"
+            - "DEFENCE_ALREADY_EXISTS"
+            - "DEFENCE_REPRESENTATION_ERROR"
+            - "MATERIAL_NOT_ACCEPTED"
           description: "Error code if the request failed"
         errorMessage:
           type: string
