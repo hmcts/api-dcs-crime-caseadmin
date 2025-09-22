@@ -30,13 +30,13 @@ jobs:
       SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
     steps:
       - name: Download versioned OpenAPI spec
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ inputs.upload_artifact_name }}
           path: ./${{ inputs.api_version }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
 
       - name: Install SwaggerHub CLI
         run: npm install -g swaggerhub-cli
