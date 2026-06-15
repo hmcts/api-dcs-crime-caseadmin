@@ -1,7 +1,11 @@
 openapi: 3.0.0
 servers:
-  - description: APIHub API Auto Mocking DCS case administration APIs
-    url: https://virtserver.swaggerhub.com/HMCTS-DTS/api-dcs-crime-caseadmin/0.0.0
+  - description: DCS case administration APIs
+    url: https://api-dcs-crime-caseadmin.net/{version}
+    variables:
+      version:
+        default: "0.0.0"
+        description: API version; matches the spec info.version
 info:
   version: 0.0.0
   title: Digital Case System (DCS) case administration APIs
